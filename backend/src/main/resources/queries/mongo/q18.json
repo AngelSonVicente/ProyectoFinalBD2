@@ -1,0 +1,55 @@
+{
+  "id": 18,
+  "titulo": "Tasa de aprobación por tipo de institución educativa",
+  "descripcion": "Porcentaje de evaluaciones aprobadas según el tipo de institución de procedencia, para compararlos entre sí.",
+  "coleccion": "evaluaciones",
+  "parametros": [],
+  "pipeline": [
+    {
+      "$group": {
+        "_id": "$tipo_institucion",
+        "total": {
+          "$sum": 1
+        },
+        "aprobadas": {
+          "$sum": {
+            "$cond": [
+              "$aprobado",
+              1,
+              0
+            ]
+          }
+        }
+      }
+    },
+    {
+      "$project": {
+        "_id": 0,
+        "tipo_institucion": "$_id",
+        "total": 1,
+        "aprobadas": 1,
+        "porcentaje_aprobacion": {
+          "$round": [
+            {
+              "$multiply": [
+                {
+                  "$divide": [
+                    "$aprobadas",
+                    "$total"
+                  ]
+                },
+                100
+              ]
+            },
+            2
+          ]
+        }
+      }
+    },
+    {
+      "$sort": {
+        "porcentaje_aprobacion": -1
+      }
+    }
+  ]
+}

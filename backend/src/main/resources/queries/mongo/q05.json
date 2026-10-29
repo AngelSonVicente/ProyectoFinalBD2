@@ -1,0 +1,56 @@
+{
+  "id": 5,
+  "titulo": "Promedio de edad por carrera",
+  "descripcion": "Edad promedio de los aspirantes de cada carrera objetivo. Se toma una edad por aspirante (la menor registrada, es decir, la de su primer ingreso) y se excluyen los que no tienen año de nacimiento.",
+  "coleccion": "evaluaciones",
+  "parametros": [],
+  "pipeline": [
+    {
+      "$match": {
+        "edad": {
+          "$ne": null
+        }
+      }
+    },
+    {
+      "$group": {
+        "_id": {
+          "carrera": "$carrera_objetivo",
+          "aspirante": "$correlativo_aspirante"
+        },
+        "edad": {
+          "$min": "$edad"
+        }
+      }
+    },
+    {
+      "$group": {
+        "_id": "$_id.carrera",
+        "edad_promedio": {
+          "$avg": "$edad"
+        },
+        "aspirantes": {
+          "$sum": 1
+        }
+      }
+    },
+    {
+      "$project": {
+        "_id": 0,
+        "carrera_objetivo": "$_id",
+        "edad_promedio": {
+          "$round": [
+            "$edad_promedio",
+            2
+          ]
+        },
+        "aspirantes": 1
+      }
+    },
+    {
+      "$sort": {
+        "edad_promedio": 1
+      }
+    }
+  ]
+}

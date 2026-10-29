@@ -1,0 +1,55 @@
+{
+  "id": 4,
+  "titulo": "Porcentaje de aprobación por materia",
+  "descripcion": "Evaluaciones aprobadas entre el total de evaluaciones de cada materia, en porcentaje.",
+  "coleccion": "evaluaciones",
+  "parametros": [],
+  "pipeline": [
+    {
+      "$group": {
+        "_id": "$materia",
+        "total": {
+          "$sum": 1
+        },
+        "aprobadas": {
+          "$sum": {
+            "$cond": [
+              "$aprobado",
+              1,
+              0
+            ]
+          }
+        }
+      }
+    },
+    {
+      "$project": {
+        "_id": 0,
+        "materia": "$_id",
+        "total": 1,
+        "aprobadas": 1,
+        "porcentaje_aprobacion": {
+          "$round": [
+            {
+              "$multiply": [
+                {
+                  "$divide": [
+                    "$aprobadas",
+                    "$total"
+                  ]
+                },
+                100
+              ]
+            },
+            2
+          ]
+        }
+      }
+    },
+    {
+      "$sort": {
+        "porcentaje_aprobacion": -1
+      }
+    }
+  ]
+}

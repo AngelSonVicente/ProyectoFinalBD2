@@ -1,0 +1,61 @@
+{
+  "id": 11,
+  "titulo": "Historial de desempeño por aspirante",
+  "descripcion": "Por cada materia del aspirante: cantidad de intentos, si llegó a aprobarla y el detalle de cada evaluación en orden de fecha.",
+  "coleccion": "evaluaciones",
+  "parametros": [
+    {
+      "nombre": "correlativo",
+      "tipo": "correlativo",
+      "requerido": true,
+      "descripcion": "correlativo_aspirante"
+    }
+  ],
+  "pipeline": [
+    {
+      "$match": {
+        "correlativo_aspirante": "{{correlativo}}"
+      }
+    },
+    {
+      "$sort": {
+        "fecha_asignacion": 1,
+        "intento": 1
+      }
+    },
+    {
+      "$group": {
+        "_id": "$materia",
+        "intentos": {
+          "$sum": 1
+        },
+        "aprobada": {
+          "$max": "$aprobado"
+        },
+        "evaluaciones": {
+          "$push": {
+            "fecha_asignacion": "$fecha_asignacion",
+            "intento": "$intento",
+            "anio_ingreso": "$anio_ingreso",
+            "aprobado": "$aprobado",
+            "carrera_objetivo": "$carrera_objetivo"
+          }
+        }
+      }
+    },
+    {
+      "$project": {
+        "_id": 0,
+        "materia": "$_id",
+        "intentos": 1,
+        "aprobada": 1,
+        "evaluaciones": 1
+      }
+    },
+    {
+      "$sort": {
+        "materia": 1
+      }
+    }
+  ]
+}
