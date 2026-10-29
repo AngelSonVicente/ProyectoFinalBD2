@@ -8,9 +8,11 @@ import java.util.List;
 import java.util.Locale;
 
 import org.bson.types.ObjectId;
+import org.neo4j.driver.exceptions.Neo4jException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,8 +25,13 @@ import gt.usac.bd2.pruebas.etl.RegistroRechazado;
 
 /**
  * Orquesta la carga de archivos: pasa cada CSV por el ETL y guarda los
- * resultados por lotes. Cada archivo se procesa de forma independiente, así
- * que un archivo con errores no detiene la carga de los demás.
+ * resultados por lotes en MongoDB y en Neo4j. Cada archivo se procesa de
+ * forma independiente, así que un archivo con errores no detiene la carga de
+ * los demás.
+ *
+ * <p>Si una de las bases falla a mitad de un archivo, la carga queda FALLIDA
+ * y lo ya guardado se conserva. Como ambas escrituras son idempotentes, basta
+ * con volver a cargar el archivo para completarla.
  */
 @Service
 public class CargaService {
@@ -35,12 +42,15 @@ public class CargaService {
 
 	private final CargaMongoRepository repositorio;
 
+	private final CargaNeo4jRepository grafo;
+
 	private final int tamanoLote;
 
-	public CargaService(LectorCsv lectorCsv, CargaMongoRepository repositorio,
+	public CargaService(LectorCsv lectorCsv, CargaMongoRepository repositorio, CargaNeo4jRepository grafo,
 			@Value("${app.carga.tamano-lote:1000}") int tamanoLote) {
 		this.lectorCsv = lectorCsv;
 		this.repositorio = repositorio;
+		this.grafo = grafo;
 		this.tamanoLote = tamanoLote;
 	}
 
@@ -99,10 +109,15 @@ public class CargaService {
 			estado = EstadoCarga.FALLIDO;
 			mensaje = "Error al guardar en MongoDB: " + e.getMessage();
 		}
+		catch (DataAccessException | Neo4jException e) {
+			log.error("Error de Neo4j durante la carga de {}", nombre, e);
+			estado = EstadoCarga.FALLIDO;
+			mensaje = "Error al guardar en Neo4j: " + e.getMessage();
+		}
 
 		long tiempoMs = (System.nanoTime() - inicio) / 1_000_000;
 		ResumenCarga resumen = new ResumenCarga(cargaId.toHexString(), nombre, progreso.validos + progreso.rechazados,
-				progreso.validos, progreso.rechazados, progreso.duplicados, tiempoMs, estado, mensaje);
+				progreso.guardados, progreso.rechazados, progreso.duplicados, tiempoMs, estado, mensaje);
 
 		try {
 			repositorio.registrarFin(resumen, new Date());
@@ -139,7 +154,11 @@ public class CargaService {
 
 		private final List<RegistroRechazado> loteRechazados = new ArrayList<>();
 
+		/** Filas válidas leídas, se hayan guardado o no. */
 		private long validos;
+
+		/** Filas válidas ya guardadas en MongoDB y en Neo4j. */
+		private long guardados;
 
 		private long rechazados;
 
@@ -152,6 +171,7 @@ public class CargaService {
 
 		private void agregarValido(RegistroEvaluacion registro) {
 			loteValidos.add(registro);
+			validos++;
 			if (loteValidos.size() >= tamanoLote) {
 				guardarValidos();
 			}
@@ -171,8 +191,11 @@ public class CargaService {
 		}
 
 		private void guardarValidos() {
-			duplicados += repositorio.guardarEvaluaciones(loteValidos, cargaId, archivo);
-			validos += loteValidos.size();
+			long duplicadosLote = repositorio.guardarEvaluaciones(loteValidos, cargaId, archivo);
+			grafo.guardarEvaluaciones(loteValidos);
+			// Solo se cuentan cuando el lote quedó en ambas bases
+			duplicados += duplicadosLote;
+			guardados += loteValidos.size();
 			loteValidos.clear();
 		}
 
