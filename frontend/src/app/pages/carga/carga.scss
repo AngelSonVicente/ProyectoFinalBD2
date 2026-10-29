@@ -1,0 +1,139 @@
+:host {
+  display: block;
+  max-width: 1100px;
+}
+
+.titulo {
+  h1 {
+    margin: 0 0 4px;
+    font: var(--mat-sys-headline-small);
+  }
+
+  p {
+    margin: 0 0 20px;
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.seccion {
+  margin-bottom: 20px;
+}
+
+.zona {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 32px 16px;
+  border: 2px dashed var(--mat-sys-outline-variant);
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: center;
+  transition:
+    background-color 150ms,
+    border-color 150ms;
+
+  &:hover,
+  &.activa {
+    border-color: var(--mat-sys-primary);
+    background: var(--mat-sys-surface-container-low);
+  }
+
+  &.deshabilitada {
+    cursor: default;
+    opacity: 0.6;
+  }
+
+  input {
+    display: none;
+  }
+}
+
+.icono-zona {
+  width: 40px;
+  height: 40px;
+  font-size: 40px;
+  color: var(--mat-sys-primary);
+}
+
+.ayuda,
+.peso,
+.mensaje,
+.vacio {
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}
+
+.lista {
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 4px 0;
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
+  }
+
+  .nombre {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.estado-subida {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.acciones {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+}
+
+.tabla-desplazable {
+  overflow-x: auto;
+
+  table {
+    width: 100%;
+  }
+}
+
+.num {
+  text-align: right;
+}
+
+.estado {
+  padding: 2px 10px;
+  border-radius: 12px;
+  font: var(--mat-sys-label-medium);
+  white-space: nowrap;
+  background: var(--mat-sys-surface-container-high);
+
+  &[data-estado='COMPLETADO'] {
+    background: #d7f5dd;
+    color: #0d5c25;
+  }
+
+  &[data-estado='COMPLETADO_CON_RECHAZOS'] {
+    background: #fff1c7;
+    color: #6b4b00;
+  }
+
+  &[data-estado='FALLIDO'] {
+    background: var(--mat-sys-error-container);
+    color: var(--mat-sys-on-error-container);
+  }
+}
+
+.recargar {
+  margin-left: auto;
+}
