@@ -11,6 +11,11 @@ spring:
       username: ${NEO4J_USER:neo4j}
       password: ${NEO4J_PASSWORD:neo4j12345}
 
+  web:
+    error:
+      # Incluye el motivo en las respuestas de error (por ejemplo, un 400 por archivo faltante)
+      include-message: always
+
   # Los CSV del dataset pueden ser grandes
   servlet:
     multipart:
