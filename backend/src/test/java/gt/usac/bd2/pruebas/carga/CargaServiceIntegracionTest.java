@@ -1,6 +1,8 @@
 package gt.usac.bd2.pruebas.carga;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.doThrow;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
@@ -10,16 +12,19 @@ import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.neo4j.driver.exceptions.ServiceUnavailableException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import gt.usac.bd2.pruebas.config.Colecciones;
 
 /**
  * Requiere el MongoDB de docker-compose. Usa la base pruebas_test para no
- * tocar los datos reales.
+ * tocar los datos reales. Neo4j se reemplaza por un mock porque la edición
+ * Community solo tiene una base de datos; se prueba en CargaNeo4jIntegracionTest.
  */
 @SpringBootTest(properties = {
 		"spring.mongodb.uri=mongodb://admin:admin123@localhost:27017/pruebas_test?authSource=admin",
@@ -42,6 +47,9 @@ class CargaServiceIntegracionTest {
 
 	@Autowired
 	private MongoTemplate mongoTemplate;
+
+	@MockitoBean
+	private CargaNeo4jRepository grafo;
 
 	@BeforeEach
 	void limpiar() {
@@ -102,6 +110,20 @@ class CargaServiceIntegracionTest {
 		assertThat(resumenes.get(0).mensaje()).contains("Faltan columnas");
 		assertThat(resumenes.get(1).mensaje()).contains(".csv");
 		assertThat(contar(Colecciones.EVALUACIONES)).isEqualTo(3);
+	}
+
+	@Test
+	void siNeo4jFallaLaCargaQuedaFallidaSinDetenerLaAplicacion() {
+		doThrow(new ServiceUnavailableException("Neo4j apagado")).when(grafo).guardarEvaluaciones(anyList());
+
+		ResumenCarga resumen = cargar(CSV);
+
+		assertThat(resumen.estado()).isEqualTo(EstadoCarga.FALLIDO);
+		assertThat(resumen.mensaje()).contains("Neo4j", "Neo4j apagado");
+		// El primer lote (2 filas) se leyó, pero no quedó guardado en ambas bases
+		assertThat(resumen.leidos()).isEqualTo(2);
+		assertThat(resumen.procesados()).isZero();
+		assertThat(resumen.duplicados()).isZero();
 	}
 
 	private long contar(String coleccion) {
