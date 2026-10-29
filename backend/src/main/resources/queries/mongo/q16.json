@@ -1,0 +1,50 @@
+{
+  "id": 16,
+  "titulo": "Carreras con más aspirantes reprobados en el primer intento",
+  "descripcion": "Carreras objetivo con más aspirantes distintos que no aprobaron alguna evaluación en su primera oportunidad (numero_de_fecha_de_evaluacion = 1). Se excluye SIN CARRERA.",
+  "coleccion": "evaluaciones",
+  "parametros": [],
+  "pipeline": [
+    {
+      "$match": {
+        "intento": 1,
+        "aprobado": false,
+        "carrera_objetivo": {
+          "$ne": "SIN CARRERA"
+        }
+      }
+    },
+    {
+      "$group": {
+        "_id": {
+          "carrera": "$carrera_objetivo",
+          "aspirante": "$correlativo_aspirante"
+        }
+      }
+    },
+    {
+      "$group": {
+        "_id": "$_id.carrera",
+        "aspirantes_reprobados": {
+          "$sum": 1
+        }
+      }
+    },
+    {
+      "$sort": {
+        "aspirantes_reprobados": -1,
+        "_id": 1
+      }
+    },
+    {
+      "$limit": 10
+    },
+    {
+      "$project": {
+        "_id": 0,
+        "carrera_objetivo": "$_id",
+        "aspirantes_reprobados": 1
+      }
+    }
+  ]
+}

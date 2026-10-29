@@ -1,0 +1,63 @@
+{
+  "id": 7,
+  "titulo": "Edad promedio de aprobados por carrera y tipo de institución",
+  "descripcion": "Edad promedio de los aspirantes con al menos una evaluación aprobada, agrupada por carrera objetivo y tipo de institución. Una edad por aspirante; se excluyen los que no tienen año de nacimiento.",
+  "coleccion": "evaluaciones",
+  "parametros": [],
+  "pipeline": [
+    {
+      "$match": {
+        "aprobado": true,
+        "edad": {
+          "$ne": null
+        }
+      }
+    },
+    {
+      "$group": {
+        "_id": {
+          "carrera": "$carrera_objetivo",
+          "tipo": "$tipo_institucion",
+          "aspirante": "$correlativo_aspirante"
+        },
+        "edad": {
+          "$min": "$edad"
+        }
+      }
+    },
+    {
+      "$group": {
+        "_id": {
+          "carrera": "$_id.carrera",
+          "tipo": "$_id.tipo"
+        },
+        "edad_promedio": {
+          "$avg": "$edad"
+        },
+        "aspirantes": {
+          "$sum": 1
+        }
+      }
+    },
+    {
+      "$project": {
+        "_id": 0,
+        "carrera_objetivo": "$_id.carrera",
+        "tipo_institucion": "$_id.tipo",
+        "edad_promedio": {
+          "$round": [
+            "$edad_promedio",
+            2
+          ]
+        },
+        "aspirantes": 1
+      }
+    },
+    {
+      "$sort": {
+        "carrera_objetivo": 1,
+        "tipo_institucion": 1
+      }
+    }
+  ]
+}

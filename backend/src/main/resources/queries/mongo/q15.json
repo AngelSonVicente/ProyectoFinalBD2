@@ -1,0 +1,51 @@
+{
+  "id": 15,
+  "titulo": "Historial completo de un aspirante",
+  "descripcion": "Toda la información del aspirante desde la colección aspirantes: datos personales, procedencia, carreras, materias y todas sus evaluaciones ordenadas por fecha.",
+  "coleccion": "aspirantes",
+  "parametros": [
+    {
+      "nombre": "correlativo",
+      "tipo": "correlativo",
+      "requerido": true,
+      "descripcion": "correlativo_aspirante"
+    }
+  ],
+  "pipeline": [
+    {
+      "$match": {
+        "_id": "{{correlativo}}"
+      }
+    },
+    {
+      "$addFields": {
+        "correlativo_aspirante": "$_id",
+        "total_evaluaciones": {
+          "$size": "$evaluaciones"
+        },
+        "evaluaciones_aprobadas": {
+          "$size": {
+            "$filter": {
+              "input": "$evaluaciones",
+              "cond": "$$this.aprobado"
+            }
+          }
+        },
+        "evaluaciones": {
+          "$sortArray": {
+            "input": "$evaluaciones",
+            "sortBy": {
+              "fecha_asignacion": 1,
+              "intento": 1
+            }
+          }
+        }
+      }
+    },
+    {
+      "$project": {
+        "_id": 0
+      }
+    }
+  ]
+}

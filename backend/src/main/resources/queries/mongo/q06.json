@@ -1,0 +1,150 @@
+{
+  "id": 6,
+  "titulo": "Creación de la colección auxiliar resumen_carrera",
+  "descripcion": "Genera (o regenera) la colección resumen_carrera con $out: por carrera guarda aspirantes, aspirantes con alguna aprobación, evaluaciones, porcentaje de aprobación, edad promedio, materias y años de ingreso. Devuelve el contenido de la colección generada.",
+  "coleccion": "evaluaciones",
+  "coleccionResultado": "resumen_carrera",
+  "parametros": [],
+  "pipeline": [
+    {
+      "$group": {
+        "_id": {
+          "carrera": "$carrera_objetivo",
+          "aspirante": "$correlativo_aspirante"
+        },
+        "evaluaciones": {
+          "$sum": 1
+        },
+        "aprobadas": {
+          "$sum": {
+            "$cond": [
+              "$aprobado",
+              1,
+              0
+            ]
+          }
+        },
+        "edad": {
+          "$min": "$edad"
+        },
+        "materias": {
+          "$addToSet": "$materia"
+        },
+        "anios": {
+          "$addToSet": "$anio_ingreso"
+        }
+      }
+    },
+    {
+      "$group": {
+        "_id": "$_id.carrera",
+        "aspirantes": {
+          "$sum": 1
+        },
+        "aspirantes_con_aprobacion": {
+          "$sum": {
+            "$cond": [
+              {
+                "$gt": [
+                  "$aprobadas",
+                  0
+                ]
+              },
+              1,
+              0
+            ]
+          }
+        },
+        "total_evaluaciones": {
+          "$sum": "$evaluaciones"
+        },
+        "evaluaciones_aprobadas": {
+          "$sum": "$aprobadas"
+        },
+        "edad_promedio": {
+          "$avg": "$edad"
+        },
+        "materias": {
+          "$push": "$materias"
+        },
+        "anios": {
+          "$push": "$anios"
+        }
+      }
+    },
+    {
+      "$project": {
+        "carrera_objetivo": "$_id",
+        "aspirantes": 1,
+        "aspirantes_con_aprobacion": 1,
+        "total_evaluaciones": 1,
+        "evaluaciones_aprobadas": 1,
+        "porcentaje_aprobacion": {
+          "$round": [
+            {
+              "$multiply": [
+                {
+                  "$divide": [
+                    "$evaluaciones_aprobadas",
+                    "$total_evaluaciones"
+                  ]
+                },
+                100
+              ]
+            },
+            2
+          ]
+        },
+        "edad_promedio": {
+          "$round": [
+            "$edad_promedio",
+            2
+          ]
+        },
+        "materias": {
+          "$sortArray": {
+            "input": {
+              "$reduce": {
+                "input": "$materias",
+                "initialValue": [],
+                "in": {
+                  "$setUnion": [
+                    "$$value",
+                    "$$this"
+                  ]
+                }
+              }
+            },
+            "sortBy": 1
+          }
+        },
+        "anios_ingreso": {
+          "$sortArray": {
+            "input": {
+              "$reduce": {
+                "input": "$anios",
+                "initialValue": [],
+                "in": {
+                  "$setUnion": [
+                    "$$value",
+                    "$$this"
+                  ]
+                }
+              }
+            },
+            "sortBy": 1
+          }
+        },
+        "generado_en": "$$NOW"
+      }
+    },
+    {
+      "$sort": {
+        "aspirantes": -1
+      }
+    },
+    {
+      "$out": "resumen_carrera"
+    }
+  ]
+}
