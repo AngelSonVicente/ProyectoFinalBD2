@@ -1,0 +1,20 @@
+<mat-toolbar color="primary">
+  <span>Pruebas Específicas · Facultad de Ingeniería USAC</span>
+</mat-toolbar>
+
+<mat-sidenav-container class="contenedor">
+  <mat-sidenav mode="side" opened>
+    <mat-nav-list>
+      @for (seccion of secciones; track seccion.ruta) {
+        <a mat-list-item [routerLink]="seccion.ruta" routerLinkActive #rla="routerLinkActive" [activated]="rla.isActive">
+          <mat-icon matListItemIcon>{{ seccion.icono }}</mat-icon>
+          <span matListItemTitle>{{ seccion.nombre }}</span>
+        </a>
+      }
+    </mat-nav-list>
+  </mat-sidenav>
+
+  <mat-sidenav-content class="contenido">
+    <router-outlet />
+  </mat-sidenav-content>
+</mat-sidenav-container>

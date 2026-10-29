@@ -1,0 +1,13 @@
+Enunciado_Proyecto_Final.pdf
+PLAN.md
+
+# Variables de entorno locales
+.env
+
+# Archivos de datos del dataset (pesados)
+data/
+*.csv
+
+# Sistema / editores
+.DS_Store
+.idea/
