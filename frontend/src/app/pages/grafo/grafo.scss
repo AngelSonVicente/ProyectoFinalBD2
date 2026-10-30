@@ -1,0 +1,193 @@
+:host {
+  display: block;
+  max-width: 1400px;
+}
+
+.titulo {
+  h1 {
+    margin: 0 0 4px;
+    font: var(--mat-sys-headline-small);
+  }
+
+  p {
+    margin: 0 0 20px;
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.filtros {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+
+  .consulta {
+    width: min(560px, 100%);
+  }
+}
+
+.parametros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0 12px;
+
+  mat-form-field {
+    width: 240px;
+
+    &.corto {
+      width: 120px;
+    }
+  }
+
+  // Los campos no usan FormControl, así que el error se muestra como pista
+  .error {
+    color: var(--mat-sys-error);
+  }
+}
+
+.acciones {
+  display: flex;
+  gap: 8px;
+  padding-top: 8px;
+}
+
+.descripcion {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}
+
+.lienzo {
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 12px;
+  background: var(--mat-sys-surface);
+  overflow: hidden;
+}
+
+.resumen {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+  font: var(--mat-sys-body-medium);
+}
+
+.area {
+  position: relative;
+  height: 620px;
+}
+
+.grafica {
+  width: 100%;
+  height: 100%;
+}
+
+.estado {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 100%;
+  min-height: 200px;
+  padding: 16px;
+  color: var(--mat-sys-on-surface-variant);
+  text-align: center;
+}
+
+.detalle {
+  position: absolute;
+  // Debajo de la leyenda del grafo
+  top: 44px;
+  right: 12px;
+  width: 280px;
+  max-height: calc(100% - 56px);
+  overflow: auto;
+  padding: 12px 16px;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 12px;
+  background: var(--mat-sys-surface-container-lowest);
+  box-shadow: var(--mat-sys-level2);
+  box-sizing: border-box;
+
+  header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+
+  .tipo {
+    color: var(--mat-sys-on-surface-variant);
+    font: var(--mat-sys-label-medium);
+  }
+
+  h3 {
+    margin: 2px 0 8px;
+    font: var(--mat-sys-title-medium);
+    word-break: break-word;
+  }
+
+  dl {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 4px 12px;
+    margin: 0;
+  }
+
+  dt {
+    color: var(--mat-sys-on-surface-variant);
+    font: var(--mat-sys-label-medium);
+  }
+
+  dd {
+    margin: 0;
+    font: var(--mat-sys-body-small);
+    word-break: break-word;
+  }
+}
+
+.leyenda-lineas {
+  margin: 0;
+  padding: 8px 16px 12px;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}
+
+.pestanas {
+  margin-top: 16px;
+}
+
+.contenido-pestana {
+  padding: 16px 0;
+
+  pre {
+    margin: 0;
+    padding: 16px;
+    overflow-x: auto;
+    border-radius: 8px;
+    background: var(--mat-sys-surface-container);
+    font:
+      13px/1.5 'Roboto Mono',
+      monospace;
+  }
+}
+
+.vacio {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+@media (max-width: 700px) {
+  .area {
+    height: 460px;
+  }
+
+  .detalle {
+    position: static;
+    width: auto;
+    margin: 12px;
+  }
+}
