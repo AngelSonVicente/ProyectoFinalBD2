@@ -112,3 +112,46 @@ export interface OpcionesFiltro {
   tiposInstitucion: string[];
   aniosIngreso: number[];
 }
+
+/** Documento de la colección evaluaciones. */
+export interface Evaluacion {
+  _id: string;
+  correlativo_aspirante: string;
+  fecha_asignacion: string;
+  sexo: string | null;
+  anio_nacimiento: number | null;
+  edad: number | null;
+  materia: string;
+  intento: number;
+  anio_ingreso: number;
+  aprobado: boolean;
+  carrera_objetivo: string;
+  departamento: string;
+  municipio: string;
+  tipo_institucion: string;
+  archivo: string;
+}
+
+/** Criterios de GET /api/buscar; todos opcionales. */
+export interface FiltrosBusqueda {
+  aspirante?: string;
+  carrera?: string;
+  institucion?: string;
+  materia?: string;
+  municipio?: string;
+  departamento?: string;
+  anio?: string;
+  aprobado?: string;
+}
+
+/** Respuesta de GET /api/buscar. */
+export interface PaginaBusqueda {
+  total: number;
+  pagina: number;
+  tamano: number;
+  totalPaginas: number;
+  /** Filtros que el backend aplicó, ya normalizados. */
+  filtros: Record<string, unknown>;
+  tiempoMs: number;
+  datos: Evaluacion[];
+}
