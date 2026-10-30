@@ -1,26 +1,23 @@
+Proyecto final de Sistemas de bases de datos 2, segundo semestre 2026
+
+| | |
+|---|---|
+| **Estudiante** | Angel Abelino Son Vicente |
+| **Carnet** | 202030885 |
+
+
 # Pruebas Específicas · MongoDB y Neo4j
 
 Aplicación web para cargar, limpiar, analizar y visualizar el dataset abierto de **Pruebas Específicas** de la Facultad de Ingeniería (2015-2024). Los datos se guardan al mismo tiempo en una base documental (MongoDB), donde se calculan las estadísticas, y en una base de grafos (Neo4j), donde se exploran las relaciones entre aspirantes, carreras, materias e instituciones.
 
-```
-Angular 21  ──HTTP/JSON──▶  Spring Boot 4 (API REST)  ──▶  MongoDB 8
-(dashboard, grafo,                                     └─▶  Neo4j 5
- carga, buscador)
-```
 
-El frontend nunca se conecta a las bases de datos: todo pasa por la API.
+El frontend nunca se conecta a las bases de datos: todo pasa por la API. La arquitectura completa está en el [manual técnico](docs/manual-tecnico.md).
 
 ## Requisitos
 
-| Herramienta | Versión usada |
-|---|---|
-| Docker y Docker Compose | cualquiera reciente |
-| Java | 21 |
-| Node.js | 20 o superior (con npm) |
+Docker con Docker Compose, Java 21 y Node.js 20 o superior (con npm). Maven no hace falta instalarlo: el backend trae `mvnw`.
 
-Maven no hace falta instalarlo: el backend trae `mvnw`.
-
-## Puesta en marcha
+## Levantar el proyecto
 
 ### 1. Bases de datos
 
