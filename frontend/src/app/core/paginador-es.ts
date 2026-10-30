@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import { MatPaginatorIntl } from '@angular/material/paginator';
 
+const numero = new Intl.NumberFormat('es-GT');
+
 /** Textos del paginador de Angular Material en español. */
 @Injectable()
 export class PaginadorEs extends MatPaginatorIntl {
@@ -16,6 +18,6 @@ export class PaginadorEs extends MatPaginatorIntl {
     }
     const inicio = pagina * tamano;
     const fin = Math.min(inicio + tamano, total);
-    return `${inicio + 1} – ${fin} de ${total}`;
+    return `${numero.format(inicio + 1)} – ${numero.format(fin)} de ${numero.format(total)}`;
   };
 }
