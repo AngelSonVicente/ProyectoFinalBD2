@@ -57,3 +57,58 @@ export interface ResultadoConsulta {
   tiempoMs: number;
   datos: Fila[];
 }
+
+/** Filtro de una consulta Cypher, leído de los comentarios del archivo .cypher. */
+export interface ParametroCypher {
+  nombre: string;
+  tipo: 'correlativo' | 'entero' | 'texto';
+  requerido: boolean;
+  valorPorDefecto: string | null;
+  descripcion: string;
+}
+
+/** Elemento de GET /api/grafo. */
+export interface ConsultaGrafoInfo {
+  id: number;
+  titulo: string;
+  descripcion: string;
+  parametros: ParametroCypher[];
+  cypher: string;
+}
+
+export interface NodoGrafo {
+  id: string;
+  nombre: string;
+  categoria: string;
+  propiedades: Fila;
+}
+
+export interface EnlaceGrafo {
+  id: string;
+  source: string;
+  target: string;
+  tipo: string;
+  propiedades: Fila;
+}
+
+/** Respuesta de GET /api/grafo/{id}. */
+export interface ResultadoGrafo {
+  id: number;
+  titulo: string;
+  descripcion: string;
+  parametros: Record<string, unknown>;
+  tiempoMs: number;
+  nodes: NodoGrafo[];
+  links: EnlaceGrafo[];
+  filas: Fila[];
+}
+
+/** Valores distintos para los filtros (GET /api/buscar/opciones). */
+export interface OpcionesFiltro {
+  carreras: string[];
+  materias: string[];
+  departamentos: string[];
+  municipios: { departamento: string; municipio: string }[];
+  tiposInstitucion: string[];
+  aniosIngreso: number[];
+}
