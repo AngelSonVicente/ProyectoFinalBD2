@@ -4,11 +4,12 @@ PLAN.md
 # Variables de entorno locales
 .env
 
-# Archivos de datos del dataset (pesados)
-data/
+# CSV sueltos (datos de prueba, exportaciones). Los datos del dataset sí se suben en data/
 *.csv
+!data/*.csv
 
 # Sistema / editores
 .DS_Store
 .idea/
 .claude/
+docs/

@@ -28,7 +28,11 @@ export function formatearNumero(valor: unknown, sufijo = ''): string {
 
 /** Acorta los nombres largos de carreras para los ejes; el tooltip muestra el nombre completo. */
 export function abreviar(texto: string, maximo = 32): string {
-  const corto = texto.replace(/^INGENIER[IÍ]A (EN )?/, 'ING. ');
+  const corto = texto
+    .replace(/^INGENIER[IÍ]A (EN )?/, 'ING. ')
+    // Las zonas de la capital solo se distinguen por el número del final
+    .replace(/^GUATEMALA - CIUDAD CAPITAL /, 'CAPITAL ')
+    .replace('(SIN ESPECIFICAR)', '(S/E)');
   return corto.length > maximo ? corto.slice(0, maximo - 1) + '…' : corto;
 }
 
@@ -62,6 +66,17 @@ const ejeCategoria = (categorias: string[], extra: Record<string, unknown> = {})
   axisLabel: { color: TEXTO, formatter: (v: string) => abreviar(v) },
   ...extra,
 });
+
+/** Pocas categorías: se muestran todas las etiquetas, partidas en dos líneas si no caben. */
+const ETIQUETAS_COMPLETAS = {
+  axisLabel: {
+    color: TEXTO,
+    interval: 0,
+    width: 96,
+    overflow: 'break' as const,
+    formatter: (v: string) => abreviar(v),
+  },
+};
 
 interface OpcionesBarras {
   categoria: (fila: Fila) => string;
@@ -117,7 +132,7 @@ export function agrupadas(datos: Fila[], o: OpcionesAgrupadas): EChartsOption {
   return {
     ...base(),
     legend: { top: 0, type: 'scroll' },
-    xAxis: ejeCategoria(categorias),
+    xAxis: ejeCategoria(categorias, ETIQUETAS_COMPLETAS),
     yAxis: ejeValor(o.sufijo),
     tooltip: { ...base().tooltip, valueFormatter: (v) => formatearNumero(v, o.sufijo) },
     series: series.map((serie) => ({
@@ -143,7 +158,10 @@ export function columnasApiladas(
   return {
     ...base(),
     legend: { top: 0 },
-    xAxis: ejeCategoria(datos.map((f) => texto(f, categoria))),
+    xAxis: ejeCategoria(
+      datos.map((f) => texto(f, categoria)),
+      ETIQUETAS_COMPLETAS,
+    ),
     yAxis: ejeValor(),
     tooltip: { ...base().tooltip, valueFormatter: (v) => formatearNumero(v) },
     series: columnas.map((c) => ({
@@ -213,7 +231,8 @@ export function anillo(datos: Fila[], categoria: string, valor: string): ECharts
         return `${d.name}<br><b>${formatearNumero(d.value)}</b> (${formatearNumero(d.percent, '%')})`;
       },
     },
-    legend: { bottom: 0, type: 'scroll' },
+    // Leyenda sin paginar: si no cabe en una línea pasa a la siguiente
+    legend: { bottom: 0, left: 'center', width: '90%' },
     series: [
       {
         type: 'pie',
@@ -248,6 +267,11 @@ export function mapaCalor(datos: Fila[], o: OpcionesCalor): EChartsOption {
     valorDe(f, o.valor),
   ]);
   const valores = puntos.map((p) => p[2]);
+  // Un solo valor extremo dejaría el resto del mapa del mismo color: la escala
+  // termina en el percentil 95 y los valores mayores usan el color más oscuro
+  const ordenados = [...valores].sort((a, b) => a - b);
+  const maximo = ordenados[Math.floor((ordenados.length - 1) * 0.95)];
+  const recortado = maximo < ordenados[ordenados.length - 1];
   return {
     textStyle: { fontFamily: 'Roboto, sans-serif', color: TEXTO },
     grid: { left: 8, right: 16, top: 8, bottom: 56 },
@@ -261,16 +285,16 @@ export function mapaCalor(datos: Fila[], o: OpcionesCalor): EChartsOption {
     xAxis: ejeCategoria(xs, { splitArea: { show: false } }),
     yAxis: ejeCategoria(ys, { inverse: true }),
     visualMap: {
-      min: Math.min(...valores),
-      max: Math.max(...valores),
+      min: ordenados[0],
+      max: maximo,
       orient: 'horizontal',
       left: 'center',
       bottom: 0,
       itemHeight: 160,
       calculable: false,
       text: [
-        formatearNumero(Math.max(...valores), o.sufijo),
-        formatearNumero(Math.min(...valores), o.sufijo),
+        (recortado ? '≥ ' : '') + formatearNumero(maximo, o.sufijo),
+        formatearNumero(ordenados[0], o.sufijo),
       ],
       textStyle: { color: TEXTO },
       inRange: { color: ESCALA },
@@ -283,7 +307,7 @@ export function mapaCalor(datos: Fila[], o: OpcionesCalor): EChartsOption {
         data: puntos,
         itemStyle: { borderColor: SUPERFICIE, borderWidth: 2 },
         label: {
-          show: puntos.length <= 80,
+          show: puntos.length <= 160,
           formatter: (p) => formatearNumero((p.value as number[])[2]),
           fontSize: 11,
         },
