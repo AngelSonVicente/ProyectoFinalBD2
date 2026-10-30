@@ -11,3 +11,4 @@ data/
 # Sistema / editores
 .DS_Store
 .idea/
+.claude/

@@ -1,4 +1,4 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpEvent, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
@@ -16,10 +16,14 @@ export class ApiService {
     return this.http.get<T>(`${this.baseUrl}/${ruta}`, { params: this.limpiarParams(params) });
   }
 
-  subirArchivos<T>(ruta: string, archivos: File[]): Observable<T> {
+  /** Envía los archivos en el campo "archivos" y emite el progreso de la subida. */
+  subirArchivos<T>(ruta: string, archivos: File[]): Observable<HttpEvent<T>> {
     const form = new FormData();
     archivos.forEach((archivo) => form.append('archivos', archivo, archivo.name));
-    return this.http.post<T>(`${this.baseUrl}/${ruta}`, form);
+    return this.http.post<T>(`${this.baseUrl}/${ruta}`, form, {
+      reportProgress: true,
+      observe: 'events',
+    });
   }
 
   // Quita los filtros vacíos para no enviarlos como parámetros

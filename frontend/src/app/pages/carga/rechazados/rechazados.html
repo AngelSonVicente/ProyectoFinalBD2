@@ -1,0 +1,71 @@
+<div class="encabezado">
+  <h3>Registros rechazados · {{ archivo() }}</h3>
+  @if (resultado(); as r) {
+    <span class="total">{{ r.total | number }} registros</span>
+  }
+</div>
+
+@if (cargando()) {
+  <mat-progress-bar mode="indeterminate" />
+}
+
+@if (resultado(); as r) {
+  @if (r.total === 0) {
+    <p class="vacio">
+      <mat-icon>check_circle</mat-icon>
+      Esta carga no tiene registros rechazados.
+    </p>
+  } @else {
+    <table mat-table [dataSource]="r.datos" class="tabla">
+      <ng-container matColumnDef="fila">
+        <th mat-header-cell *matHeaderCellDef>Fila</th>
+        <td mat-cell *matCellDef="let registro">{{ registro.numeroFila | number }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="causas">
+        <th mat-header-cell *matHeaderCellDef>Causa del rechazo</th>
+        <td mat-cell *matCellDef="let registro">
+          <ul class="causas">
+            @for (causa of registro.causas; track $index) {
+              <li>{{ causa }}</li>
+            }
+          </ul>
+          @if (expandida() === registro.numeroFila) {
+            <dl class="original">
+              @for (campo of registro.filaOriginal | keyvalue: sinOrden; track campo.key) {
+                <dt>{{ campo.key }}</dt>
+                <dd>{{ campo.value || '(vacío)' }}</dd>
+              }
+            </dl>
+          }
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="detalle">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let registro" class="accion">
+          <button
+            mat-button
+            type="button"
+            (click)="alternar(registro.numeroFila)"
+            [attr.aria-expanded]="expandida() === registro.numeroFila"
+          >
+            {{ expandida() === registro.numeroFila ? 'Ocultar fila' : 'Ver fila original' }}
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="columnas"></tr>
+      <tr mat-row *matRowDef="let fila; columns: columnas"></tr>
+    </table>
+
+    <mat-paginator
+      [length]="r.total"
+      [pageIndex]="pagina()"
+      [pageSize]="tamano()"
+      [pageSizeOptions]="[10, 25, 50, 100]"
+      (page)="cambiarPagina($event)"
+      aria-label="Páginas de registros rechazados"
+    />
+  }
+}
