@@ -43,3 +43,17 @@ export interface PaginaRechazados {
   tamano: number;
   datos: RegistroRechazado[];
 }
+
+/** Fila de una agregación de MongoDB: el backend devuelve los documentos tal cual. */
+export type Fila = Record<string, unknown>;
+
+/** Respuesta de GET /api/mongo/{id}. */
+export interface ResultadoConsulta {
+  id: number;
+  titulo: string;
+  descripcion: string;
+  coleccion: string;
+  total: number;
+  tiempoMs: number;
+  datos: Fila[];
+}

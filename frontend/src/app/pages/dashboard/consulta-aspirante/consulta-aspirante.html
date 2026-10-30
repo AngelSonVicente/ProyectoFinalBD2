@@ -1,0 +1,106 @@
+<form class="busqueda" (submit)="$event.preventDefault(); consultar()">
+  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+    <mat-label>Correlativo del aspirante</mat-label>
+    <input
+      matInput
+      [value]="correlativo()"
+      (input)="correlativo.set($any($event.target).value)"
+      autocomplete="off"
+    />
+    <mat-icon matSuffix>badge</mat-icon>
+  </mat-form-field>
+  <button mat-flat-button type="submit" [disabled]="!correlativo().trim() || cargando()">
+    Consultar
+  </button>
+</form>
+
+@if (cargando()) {
+  <mat-progress-bar mode="indeterminate" />
+}
+
+@if (historial(); as h) {
+  @if (!perfil()) {
+    <div class="estado">
+      <mat-icon>person_search</mat-icon>
+      No se encontró ningún aspirante con el correlativo «{{ buscado() }}».
+    </div>
+  } @else {
+    <section class="bloque">
+      <header>
+        <span class="numero">Q15</span>
+        <div>
+          <h3>{{ h.titulo }}</h3>
+          <p>{{ h.descripcion }}</p>
+        </div>
+      </header>
+      <dl class="perfil">
+        @for (dato of datosPerfil(); track dato.etiqueta) {
+          <div>
+            <dt>{{ dato.etiqueta }}</dt>
+            <dd>{{ dato.valor }}</dd>
+          </div>
+        }
+      </dl>
+      <h4>Evaluaciones</h4>
+      <app-tabla-datos [datos]="evaluaciones()" [ocultar]="['evaluacion_id']" />
+      <footer>{{ h.tiempoMs | number }} ms · colección {{ h.coleccion }}</footer>
+    </section>
+
+    @if (desempeno(); as d) {
+      <section class="bloque">
+        <header>
+          <span class="numero">Q11</span>
+          <div>
+            <h3>{{ d.titulo }}</h3>
+            <p>{{ d.descripcion }}</p>
+          </div>
+        </header>
+        <div class="desplazable">
+          <table mat-table [dataSource]="d.datos">
+            <ng-container matColumnDef="materia">
+              <th mat-header-cell *matHeaderCellDef>Materia</th>
+              <td mat-cell *matCellDef="let fila">{{ fila.materia }}</td>
+            </ng-container>
+            <ng-container matColumnDef="intentos">
+              <th mat-header-cell *matHeaderCellDef class="num">Intentos</th>
+              <td mat-cell *matCellDef="let fila" class="num">{{ fila.intentos }}</td>
+            </ng-container>
+            <ng-container matColumnDef="aprobada">
+              <th mat-header-cell *matHeaderCellDef>Resultado</th>
+              <td mat-cell *matCellDef="let fila">
+                <span class="resultado" [class.aprobada]="fila.aprobada">
+                  <mat-icon>{{ fila.aprobada ? 'check_circle' : 'cancel' }}</mat-icon>
+                  {{ fila.aprobada ? 'Aprobada' : 'No aprobada' }}
+                </span>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="evaluaciones">
+              <th mat-header-cell *matHeaderCellDef>Detalle por intento</th>
+              <td mat-cell *matCellDef="let fila">
+                <ol class="intentos">
+                  @for (ev of intentos(fila); track $index) {
+                    <li>
+                      Intento {{ ev.intento }} · {{ formatear(ev.fecha_asignacion) }} ·
+                      {{ ev.aprobado ? 'Aprobado' : 'No aprobado' }}
+                    </li>
+                  }
+                </ol>
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="columnasMateria"></tr>
+            <tr mat-row *matRowDef="let fila; columns: columnasMateria"></tr>
+          </table>
+        </div>
+        <footer>
+          {{ d.total | number }} materias · {{ d.tiempoMs | number }} ms · colección
+          {{ d.coleccion }}
+        </footer>
+      </section>
+    }
+  }
+} @else if (!cargando()) {
+  <div class="estado">
+    <mat-icon>manage_search</mat-icon>
+    Escribe un correlativo para ver el historial del aspirante y su desempeño por materia.
+  </div>
+}
