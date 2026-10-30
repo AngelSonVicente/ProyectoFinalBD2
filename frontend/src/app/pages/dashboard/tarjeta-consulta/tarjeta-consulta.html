@@ -1,0 +1,59 @@
+<header>
+  <span class="numero">Q{{ config().id }}</span>
+  <div class="textos">
+    <h3>{{ resultado()?.titulo ?? 'Consulta ' + config().id }}</h3>
+    @if (resultado(); as r) {
+      <p>{{ r.descripcion }}</p>
+    }
+  </div>
+  @if (tieneGrafica() && resultado()?.total) {
+    <mat-button-toggle-group
+      [value]="vista()"
+      (change)="vista.set($event.value)"
+      hideSingleSelectionIndicator
+      aria-label="Forma de ver el resultado"
+    >
+      <mat-button-toggle value="grafica" aria-label="Gráfica"
+        ><mat-icon>bar_chart</mat-icon></mat-button-toggle
+      >
+      <mat-button-toggle value="tabla" aria-label="Tabla"
+        ><mat-icon>table_rows</mat-icon></mat-button-toggle
+      >
+    </mat-button-toggle-group>
+  }
+</header>
+
+@if (cargando()) {
+  <mat-progress-bar mode="indeterminate" />
+}
+
+<div class="cuerpo">
+  @if (error()) {
+    <div class="estado">
+      <mat-icon>cloud_off</mat-icon>
+      <span>No se pudo ejecutar la consulta.</span>
+      <button mat-stroked-button type="button" (click)="consultar()">Reintentar</button>
+    </div>
+  } @else if (resultado(); as r) {
+    @if (r.total === 0) {
+      <div class="estado">
+        <mat-icon>inbox</mat-icon>
+        <span>La consulta no devolvió resultados. Carga un archivo para ver datos.</span>
+      </div>
+    } @else if (vista() === 'grafica' && opciones(); as op) {
+      <div echarts [options]="op" [style.height.px]="altura()" class="grafica"></div>
+    } @else {
+      <app-tabla-datos [datos]="filasTabla()" [ocultar]="config().ocultar ?? []" />
+    }
+  } @else {
+    <div class="estado"><span>Ejecutando consulta…</span></div>
+  }
+</div>
+
+@if (resultado(); as r) {
+  <footer>
+    {{ r.total | number }} {{ r.total === 1 ? 'fila' : 'filas' }} · {{ r.tiempoMs | number }} ms ·
+    colección
+    {{ r.coleccion }}
+  </footer>
+}

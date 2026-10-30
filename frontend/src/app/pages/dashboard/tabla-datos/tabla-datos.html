@@ -1,0 +1,28 @@
+<div class="desplazable">
+  <table mat-table [dataSource]="fuente" matSort>
+    @for (columna of columnas(); track columna.campo) {
+      <ng-container [matColumnDef]="columna.campo">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ columna.titulo }}</th>
+        <td
+          mat-cell
+          *matCellDef="let fila"
+          [class.num]="esNumero(fila[columna.campo], columna.campo)"
+          [attr.title]="formatear(fila[columna.campo], columna.campo)"
+        >
+          {{ formatear(fila[columna.campo], columna.campo) }}
+        </td>
+      </ng-container>
+    }
+
+    <tr mat-header-row *matHeaderRowDef="campos(); sticky: true"></tr>
+    <tr mat-row *matRowDef="let fila; columns: campos()"></tr>
+  </table>
+</div>
+
+@if (paginada()) {
+  <mat-paginator
+    [pageSize]="tamano()"
+    [pageSizeOptions]="[10, 25, 50, 100]"
+    aria-label="Páginas de la tabla"
+  />
+}
