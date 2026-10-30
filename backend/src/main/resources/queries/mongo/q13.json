@@ -1,0 +1,62 @@
+{
+  "id": 13,
+  "titulo": "Tasa de aprobación por edad",
+  "descripcion": "Porcentaje de evaluaciones aprobadas para cada edad. Se excluyen las evaluaciones sin edad calculable.",
+  "coleccion": "evaluaciones",
+  "parametros": [],
+  "pipeline": [
+    {
+      "$match": {
+        "edad": {
+          "$ne": null
+        }
+      }
+    },
+    {
+      "$group": {
+        "_id": "$edad",
+        "total": {
+          "$sum": 1
+        },
+        "aprobadas": {
+          "$sum": {
+            "$cond": [
+              "$aprobado",
+              1,
+              0
+            ]
+          }
+        }
+      }
+    },
+    {
+      "$project": {
+        "_id": 0,
+        "edad": "$_id",
+        "total": 1,
+        "aprobadas": 1,
+        "porcentaje_aprobacion": {
+          "$round": [
+            {
+              "$multiply": [
+                {
+                  "$divide": [
+                    "$aprobadas",
+                    "$total"
+                  ]
+                },
+                100
+              ]
+            },
+            2
+          ]
+        }
+      }
+    },
+    {
+      "$sort": {
+        "edad": 1
+      }
+    }
+  ]
+}

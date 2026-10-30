@@ -1,0 +1,44 @@
+{
+  "id": 9,
+  "titulo": "Evaluaciones por mes y materia en instituciones públicas",
+  "descripcion": "Cantidad de evaluaciones por mes de asignación (año-mes) y materia, solo de aspirantes que provienen de instituciones públicas.",
+  "coleccion": "evaluaciones",
+  "parametros": [],
+  "pipeline": [
+    {
+      "$match": {
+        "tipo_institucion": "PUBLICO"
+      }
+    },
+    {
+      "$group": {
+        "_id": {
+          "mes": {
+            "$dateToString": {
+              "format": "%Y-%m",
+              "date": "$fecha_asignacion"
+            }
+          },
+          "materia": "$materia"
+        },
+        "evaluaciones": {
+          "$sum": 1
+        }
+      }
+    },
+    {
+      "$project": {
+        "_id": 0,
+        "mes": "$_id.mes",
+        "materia": "$_id.materia",
+        "evaluaciones": 1
+      }
+    },
+    {
+      "$sort": {
+        "mes": 1,
+        "materia": 1
+      }
+    }
+  ]
+}

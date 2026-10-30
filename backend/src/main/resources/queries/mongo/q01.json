@@ -1,0 +1,37 @@
+{
+  "id": 1,
+  "titulo": "Aspirantes por tipo de institución educativa",
+  "descripcion": "Cantidad de aspirantes distintos (por correlativo) agrupados por tipo de institución. Primero se agrupa por tipo y aspirante para no contar dos veces a quien hizo varias evaluaciones.",
+  "coleccion": "evaluaciones",
+  "parametros": [],
+  "pipeline": [
+    {
+      "$group": {
+        "_id": {
+          "tipo": "$tipo_institucion",
+          "aspirante": "$correlativo_aspirante"
+        }
+      }
+    },
+    {
+      "$group": {
+        "_id": "$_id.tipo",
+        "aspirantes": {
+          "$sum": 1
+        }
+      }
+    },
+    {
+      "$project": {
+        "_id": 0,
+        "tipo_institucion": "$_id",
+        "aspirantes": 1
+      }
+    },
+    {
+      "$sort": {
+        "aspirantes": -1
+      }
+    }
+  ]
+}

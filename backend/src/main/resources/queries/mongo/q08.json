@@ -1,0 +1,51 @@
+{
+  "id": 8,
+  "titulo": "Distribución de aprobados por municipio y carrera objetivo",
+  "descripcion": "Aspirantes distintos con al menos una evaluación aprobada según el municipio de su institución y su carrera objetivo.",
+  "coleccion": "evaluaciones",
+  "parametros": [],
+  "pipeline": [
+    {
+      "$match": {
+        "aprobado": true
+      }
+    },
+    {
+      "$group": {
+        "_id": {
+          "departamento": "$departamento",
+          "municipio": "$municipio",
+          "carrera": "$carrera_objetivo",
+          "aspirante": "$correlativo_aspirante"
+        }
+      }
+    },
+    {
+      "$group": {
+        "_id": {
+          "departamento": "$_id.departamento",
+          "municipio": "$_id.municipio",
+          "carrera": "$_id.carrera"
+        },
+        "aspirantes_aprobados": {
+          "$sum": 1
+        }
+      }
+    },
+    {
+      "$project": {
+        "_id": 0,
+        "departamento": "$_id.departamento",
+        "municipio": "$_id.municipio",
+        "carrera_objetivo": "$_id.carrera",
+        "aspirantes_aprobados": 1
+      }
+    },
+    {
+      "$sort": {
+        "aspirantes_aprobados": -1,
+        "municipio": 1
+      }
+    }
+  ]
+}

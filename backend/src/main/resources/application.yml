@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: backend
+
+  mongodb:
+    uri: ${MONGO_URI:mongodb://admin:admin123@localhost:27017/pruebas_especificas?authSource=admin}
+
+  neo4j:
+    uri: ${NEO4J_URI:bolt://localhost:7687}
+    authentication:
+      username: ${NEO4J_USER:neo4j}
+      password: ${NEO4J_PASSWORD:neo4j12345}
+    # Si Neo4j no responde, fallar en segundos con un error controlado (por defecto son 30 s)
+    connection-timeout: 5s
+    max-transaction-retry-time: 5s
+
+  web:
+    error:
+      # Incluye el motivo en las respuestas de error (por ejemplo, un 400 por archivo faltante)
+      include-message: always
+
+  # Los CSV del dataset pueden ser grandes
+  servlet:
+    multipart:
+      max-file-size: 200MB
+      max-request-size: 500MB
+
+server:
+  port: ${SERVER_PORT:8080}
+
+app:
+  cors:
+    allowed-origins: ${CORS_ORIGINS:http://localhost:4200}
+  carga:
+    tamano-lote: 1000

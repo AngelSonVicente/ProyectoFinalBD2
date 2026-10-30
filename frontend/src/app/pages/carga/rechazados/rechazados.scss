@@ -1,0 +1,61 @@
+.encabezado {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+
+  h3 {
+    margin: 0 0 8px;
+    font: var(--mat-sys-title-medium);
+  }
+}
+
+.total {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.tabla {
+  width: 100%;
+
+  td {
+    vertical-align: top;
+    padding-top: 8px;
+  }
+}
+
+.causas {
+  margin: 8px 0;
+  padding-left: 18px;
+}
+
+.accion {
+  text-align: right;
+}
+
+.original {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 2px 16px;
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--mat-sys-surface-container);
+  font: var(--mat-sys-body-small);
+
+  dt {
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  dd {
+    margin: 0;
+    font-family: monospace;
+    word-break: break-all;
+  }
+}
+
+.vacio {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--mat-sys-on-surface-variant);
+}

@@ -1,0 +1,72 @@
+<div class="titulo">
+  <h1>Dashboard</h1>
+  <p>Resultados de las 20 consultas de agregación sobre MongoDB.</p>
+</div>
+
+<section class="indicadores" aria-label="Indicadores generales">
+  @if (indicadores(); as i) {
+    <div class="kpi">
+      <span class="etiqueta">Aspirantes</span>
+      <span class="valor">{{ i.aspirantes | number }}</span>
+      <span class="detalle">distintos por correlativo</span>
+    </div>
+    <div class="kpi">
+      <span class="etiqueta">Evaluaciones</span>
+      <span class="valor">{{ i.evaluaciones | number }}</span>
+      <span class="detalle">{{ i.aprobadas | number }} aprobadas</span>
+    </div>
+    <div class="kpi">
+      <span class="etiqueta">Tasa de aprobación</span>
+      <span class="valor">
+        {{ i.evaluaciones ? (i.aprobadas / i.evaluaciones | percent: '1.1-1') : '—' }}
+      </span>
+      <span class="detalle">de todas las evaluaciones</span>
+    </div>
+    <div class="kpi">
+      <span class="etiqueta">Registros rechazados</span>
+      <span class="valor">{{ i.rechazados | number }}</span>
+      <span class="detalle"
+        >en {{ i.cargas | number }} {{ i.cargas === 1 ? 'carga' : 'cargas' }}</span
+      >
+    </div>
+  } @else if (errorIndicadores()) {
+    <div class="kpi error">
+      <mat-icon>cloud_off</mat-icon>
+      <span>No se pudieron calcular los indicadores.</span>
+      <button mat-stroked-button type="button" (click)="cargarIndicadores()">Reintentar</button>
+    </div>
+  } @else {
+    @for (n of [1, 2, 3, 4]; track n) {
+      <div class="kpi cargando" aria-hidden="true"></div>
+    }
+  }
+</section>
+
+@if (indicadores()?.evaluaciones === 0) {
+  <div class="aviso">
+    <mat-icon>info</mat-icon>
+    <span>Todavía no hay datos cargados, así que las consultas no devolverán resultados.</span>
+    <a mat-button routerLink="/carga">Ir a carga de archivos</a>
+  </div>
+}
+
+<mat-tab-group preserveContent mat-stretch-tabs="false" animationDuration="0ms">
+  @for (seccion of secciones; track seccion.id) {
+    <mat-tab [label]="seccion.titulo + ' (' + seccion.consultas.length + ')'">
+      <ng-template matTabContent>
+        <div class="cuadricula">
+          @for (consulta of seccion.consultas; track consulta.id) {
+            <app-tarjeta-consulta [config]="consulta" />
+          }
+        </div>
+      </ng-template>
+    </mat-tab>
+  }
+  <mat-tab label="Por aspirante (2)">
+    <ng-template matTabContent>
+      <div class="panel-aspirante">
+        <app-consulta-aspirante />
+      </div>
+    </ng-template>
+  </mat-tab>
+</mat-tab-group>

@@ -1,0 +1,53 @@
+{
+  "id": 14,
+  "titulo": "Número promedio de intentos por materia",
+  "descripcion": "Promedio de evaluaciones (oportunidades) que usa cada aspirante en una materia, contando todos sus años de ingreso.",
+  "coleccion": "evaluaciones",
+  "parametros": [],
+  "pipeline": [
+    {
+      "$group": {
+        "_id": {
+          "materia": "$materia",
+          "aspirante": "$correlativo_aspirante"
+        },
+        "intentos": {
+          "$sum": 1
+        }
+      }
+    },
+    {
+      "$group": {
+        "_id": "$_id.materia",
+        "promedio_intentos": {
+          "$avg": "$intentos"
+        },
+        "maximo_intentos": {
+          "$max": "$intentos"
+        },
+        "aspirantes": {
+          "$sum": 1
+        }
+      }
+    },
+    {
+      "$project": {
+        "_id": 0,
+        "materia": "$_id",
+        "promedio_intentos": {
+          "$round": [
+            "$promedio_intentos",
+            2
+          ]
+        },
+        "maximo_intentos": 1,
+        "aspirantes": 1
+      }
+    },
+    {
+      "$sort": {
+        "promedio_intentos": -1
+      }
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+:host {
+  display: block;
+}
+
+.desplazable {
+  overflow: auto;
+  max-height: 480px;
+}
+
+table {
+  width: 100%;
+}
+
+th,
+td {
+  white-space: nowrap;
+}
+
+td {
+  max-width: 420px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}

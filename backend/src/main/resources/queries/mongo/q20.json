@@ -1,0 +1,81 @@
+{
+  "id": 20,
+  "titulo": "Evolución de la aprobación por año de ingreso",
+  "descripcion": "Cantidad y porcentaje de evaluaciones aprobadas y no aprobadas por año de ingreso.",
+  "coleccion": "evaluaciones",
+  "parametros": [],
+  "pipeline": [
+    {
+      "$group": {
+        "_id": "$anio_ingreso",
+        "total": {
+          "$sum": 1
+        },
+        "aprobadas": {
+          "$sum": {
+            "$cond": [
+              "$aprobado",
+              1,
+              0
+            ]
+          }
+        },
+        "no_aprobadas": {
+          "$sum": {
+            "$cond": [
+              "$aprobado",
+              0,
+              1
+            ]
+          }
+        }
+      }
+    },
+    {
+      "$project": {
+        "_id": 0,
+        "anio_ingreso": "$_id",
+        "total": 1,
+        "aprobadas": 1,
+        "no_aprobadas": 1,
+        "porcentaje_aprobadas": {
+          "$round": [
+            {
+              "$multiply": [
+                {
+                  "$divide": [
+                    "$aprobadas",
+                    "$total"
+                  ]
+                },
+                100
+              ]
+            },
+            2
+          ]
+        },
+        "porcentaje_no_aprobadas": {
+          "$round": [
+            {
+              "$multiply": [
+                {
+                  "$divide": [
+                    "$no_aprobadas",
+                    "$total"
+                  ]
+                },
+                100
+              ]
+            },
+            2
+          ]
+        }
+      }
+    },
+    {
+      "$sort": {
+        "anio_ingreso": 1
+      }
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "id": 19,
+  "titulo": "Carreras más demandadas por departamento",
+  "descripcion": "Para cada departamento de procedencia, las tres carreras objetivo con más aspirantes distintos. Se excluye SIN CARRERA.",
+  "coleccion": "evaluaciones",
+  "parametros": [],
+  "pipeline": [
+    {
+      "$match": {
+        "carrera_objetivo": {
+          "$ne": "SIN CARRERA"
+        }
+      }
+    },
+    {
+      "$group": {
+        "_id": {
+          "departamento": "$departamento",
+          "carrera": "$carrera_objetivo",
+          "aspirante": "$correlativo_aspirante"
+        }
+      }
+    },
+    {
+      "$group": {
+        "_id": {
+          "departamento": "$_id.departamento",
+          "carrera": "$_id.carrera"
+        },
+        "aspirantes": {
+          "$sum": 1
+        }
+      }
+    },
+    {
+      "$group": {
+        "_id": "$_id.departamento",
+        "carreras": {
+          "$topN": {
+            "n": 3,
+            "sortBy": {
+              "aspirantes": -1
+            },
+            "output": {
+              "carrera_objetivo": "$_id.carrera",
+              "aspirantes": "$aspirantes"
+            }
+          }
+        }
+      }
+    },
+    {
+      "$project": {
+        "_id": 0,
+        "departamento": "$_id",
+        "carreras": 1
+      }
+    },
+    {
+      "$sort": {
+        "departamento": 1
+      }
+    }
+  ]
+}

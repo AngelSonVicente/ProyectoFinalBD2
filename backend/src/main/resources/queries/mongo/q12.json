@@ -1,0 +1,39 @@
+{
+  "id": 12,
+  "titulo": "Distribución por sexo y tipo de institución educativa",
+  "descripcion": "Cantidad de aspirantes por sexo y tipo de institución. Usa la colección aspirantes porque allí el sexo ya está consolidado por aspirante (si alguna fila lo trae, no queda como SIN REGISTRO).",
+  "coleccion": "aspirantes",
+  "parametros": [],
+  "pipeline": [
+    {
+      "$group": {
+        "_id": {
+          "sexo": {
+            "$ifNull": [
+              "$sexo",
+              "SIN REGISTRO"
+            ]
+          },
+          "tipo": "$tipo_institucion"
+        },
+        "aspirantes": {
+          "$sum": 1
+        }
+      }
+    },
+    {
+      "$project": {
+        "_id": 0,
+        "sexo": "$_id.sexo",
+        "tipo_institucion": "$_id.tipo",
+        "aspirantes": 1
+      }
+    },
+    {
+      "$sort": {
+        "tipo_institucion": 1,
+        "sexo": 1
+      }
+    }
+  ]
+}

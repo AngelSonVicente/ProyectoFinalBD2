@@ -1,0 +1,157 @@
+<div class="titulo">
+  <h1>Explorador de grafos</h1>
+  <p>
+    Consultas Cypher sobre Neo4j. Arrastra los nodos, acerca con la rueda del ratón y haz clic en un
+    nodo para ver sus propiedades.
+  </p>
+</div>
+
+@if (errorCatalogo()) {
+  <div class="estado">
+    <mat-icon>cloud_off</mat-icon>
+    <span>No se pudieron cargar las consultas disponibles.</span>
+    <button mat-stroked-button type="button" (click)="cargarCatalogo()">Reintentar</button>
+  </div>
+} @else {
+  <section class="filtros">
+    <mat-form-field appearance="outline" class="consulta" subscriptSizing="dynamic">
+      <mat-label>Consulta</mat-label>
+      <mat-select [value]="seleccionada()?.id" (selectionChange)="elegir($event.value)">
+        @for (c of consultas(); track c.id) {
+          <mat-option [value]="c.id">C{{ c.id }} · {{ c.titulo }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    @if (seleccionada(); as consulta) {
+      <form class="parametros" (submit)="$event.preventDefault(); ejecutar()">
+        @for (p of consulta.parametros; track p.nombre) {
+          <mat-form-field
+            appearance="outline"
+            [class.corto]="p.tipo === 'entero'"
+            [title]="p.descripcion"
+          >
+            <mat-label>{{ etiqueta(p) }}</mat-label>
+            @if (lista(p); as opciones) {
+              <mat-select
+                [value]="valores()[p.nombre]"
+                (selectionChange)="cambiar(p.nombre, $event.value)"
+              >
+                <mat-option value="">Todos</mat-option>
+                @for (o of opciones; track o) {
+                  <mat-option [value]="o">{{ o }}</mat-option>
+                }
+              </mat-select>
+            } @else {
+              <input
+                matInput
+                [type]="p.tipo === 'entero' ? 'number' : 'text'"
+                [min]="p.tipo === 'entero' ? 1 : null"
+                [max]="p.tipo === 'entero' ? limiteMaximo : null"
+                [value]="valores()[p.nombre]"
+                (input)="cambiar(p.nombre, $any($event.target).value)"
+                autocomplete="off"
+              />
+            }
+            @if (errores()[p.nombre]; as error) {
+              <mat-hint class="error">{{ error }}</mat-hint>
+            }
+          </mat-form-field>
+        }
+        <div class="acciones">
+          <button mat-flat-button type="submit" [disabled]="!valido() || ejecutando()">
+            <mat-icon>play_arrow</mat-icon>
+            Ejecutar
+          </button>
+          <button mat-button type="button" (click)="limpiar()" [disabled]="ejecutando()">
+            Restablecer
+          </button>
+        </div>
+      </form>
+      <p class="descripcion">{{ consulta.descripcion }}</p>
+    }
+  </section>
+
+  <section class="lienzo">
+    @if (ejecutando()) {
+      <mat-progress-bar mode="indeterminate" />
+    }
+
+    @if (resultado(); as r) {
+      <header class="resumen">
+        <span>
+          <b>{{ r.nodes.length | number }}</b> nodos ·
+          <b>{{ r.links.length | number }}</b> relaciones · {{ r.tiempoMs | number }} ms
+        </span>
+      </header>
+    }
+
+    <div class="area">
+      @if (opciones(); as op) {
+        <div echarts [options]="op" class="grafica" (chartClick)="alHacerClic($event)"></div>
+      } @else if (errorConsulta()) {
+        <div class="estado">
+          <mat-icon>cloud_off</mat-icon>
+          <span>No se pudo ejecutar la consulta.</span>
+          <button mat-stroked-button type="button" (click)="ejecutar()">Reintentar</button>
+        </div>
+      } @else if (resultado()) {
+        <div class="estado">
+          <mat-icon>hub</mat-icon>
+          <span>La consulta no devolvió nodos. Prueba con otros filtros o carga un archivo.</span>
+        </div>
+      } @else if (!ejecutando()) {
+        <div class="estado">
+          <mat-icon>hub</mat-icon>
+          <span>Completa los filtros y presiona Ejecutar para dibujar el grafo.</span>
+        </div>
+      }
+
+      @if (nodoActivo(); as nodo) {
+        <aside class="detalle" aria-label="Propiedades del nodo">
+          <header>
+            <div>
+              <span class="tipo">{{ nombresCategoria[nodo.categoria] ?? nodo.categoria }}</span>
+              <h3>{{ nodo.nombre }}</h3>
+            </div>
+            <button
+              mat-icon-button
+              type="button"
+              (click)="nodoActivo.set(null)"
+              aria-label="Cerrar"
+            >
+              <mat-icon>close</mat-icon>
+            </button>
+          </header>
+          <dl>
+            @for (p of detalleNodo(); track p.clave) {
+              <dt>{{ p.clave }}</dt>
+              <dd>{{ p.valor }}</dd>
+            }
+          </dl>
+        </aside>
+      }
+    </div>
+    <p class="leyenda-lineas">
+      Línea punteada: intento no aprobado. En las relaciones calculadas (aspirantes, tasa de
+      aprobación) el grosor indica el valor.
+    </p>
+  </section>
+
+  <mat-tab-group mat-stretch-tabs="false" animationDuration="0ms" class="pestanas">
+    <mat-tab [label]="'Filas del resultado (' + (resultado()?.filas?.length ?? 0) + ')'">
+      <div class="contenido-pestana">
+        @if (resultado()?.filas?.length) {
+          <app-tabla-datos [datos]="resultado()!.filas" />
+        } @else {
+          <p class="vacio">Sin filas.</p>
+        }
+      </div>
+    </mat-tab>
+    <mat-tab label="Consulta Cypher">
+      <div class="contenido-pestana">
+        <pre><code>{{ seleccionada()?.cypher }}</code></pre>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+}

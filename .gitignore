@@ -1,0 +1,15 @@
+Enunciado_Proyecto_Final.pdf
+PLAN.md
+
+# Variables de entorno locales
+.env
+
+# CSV sueltos (datos de prueba, exportaciones). Los datos del dataset sí se suben en data/
+*.csv
+!data/*.csv
+
+# Sistema / editores
+.DS_Store
+.idea/
+.claude/
+docs/

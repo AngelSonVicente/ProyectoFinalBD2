@@ -1,0 +1,226 @@
+<header class="titulo">
+  <h1>Carga de archivos</h1>
+  <p>
+    Suba uno o varios CSV del dataset de Pruebas Específicas. Cada archivo se valida, se limpia y se
+    guarda en MongoDB y Neo4j. Volver a cargar un archivo no duplica los datos.
+  </p>
+</header>
+
+<mat-card appearance="outlined" class="seccion">
+  <mat-card-content>
+    <label
+      class="zona"
+      [class.activa]="arrastrando()"
+      [class.deshabilitada]="ocupado()"
+      (dragover)="alArrastrar($event, true)"
+      (dragleave)="alArrastrar($event, false)"
+      (drop)="alSoltar($event)"
+    >
+      <mat-icon class="icono-zona">upload_file</mat-icon>
+      <span class="texto-zona">Arrastre los archivos aquí o <strong>haga clic para elegirlos</strong></span>
+      <span class="ayuda">Solo archivos .csv, hasta 200 MB cada uno</span>
+      <input type="file" accept=".csv,text/csv" multiple [disabled]="ocupado()" (change)="alSeleccionar($event)" />
+    </label>
+
+    @if (archivos().length > 0) {
+      <ul class="lista">
+        @for (archivo of archivos(); track archivo.name + archivo.size) {
+          <li>
+            <mat-icon>description</mat-icon>
+            <span class="nombre">{{ archivo.name }}</span>
+            <span class="peso">{{ tamano(archivo.size) }}</span>
+            <button
+              mat-icon-button
+              type="button"
+              [disabled]="ocupado()"
+              (click)="quitar(archivo)"
+              [attr.aria-label]="'Quitar ' + archivo.name"
+            >
+              <mat-icon>close</mat-icon>
+            </button>
+          </li>
+        }
+      </ul>
+    }
+
+    @switch (fase()) {
+      @case ('subiendo') {
+        <div class="estado-subida">
+          <span>Enviando archivos… {{ progreso() }} %</span>
+          <mat-progress-bar mode="determinate" [value]="progreso()" />
+        </div>
+      }
+      @case ('procesando') {
+        <div class="estado-subida">
+          <span>Procesando y guardando en MongoDB y Neo4j. Con archivos grandes puede tardar un minuto…</span>
+          <mat-progress-bar mode="indeterminate" />
+        </div>
+      }
+    }
+
+    <div class="acciones">
+      <span class="peso">
+        @if (archivos().length > 0) {
+          {{ archivos().length }} archivo(s) · {{ tamano(tamanoTotal()) }}
+        }
+      </span>
+      <button mat-flat-button type="button" [disabled]="archivos().length === 0 || ocupado()" (click)="subir()">
+        <mat-icon>cloud_upload</mat-icon>
+        Cargar
+      </button>
+    </div>
+  </mat-card-content>
+</mat-card>
+
+@if (resultados().length > 0) {
+  <mat-card appearance="outlined" class="seccion">
+    <mat-card-header>
+      <mat-card-title>Resultado de la carga</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="tabla-desplazable">
+        <table mat-table [dataSource]="resultados()">
+          <ng-container matColumnDef="archivo">
+            <th mat-header-cell *matHeaderCellDef>Archivo</th>
+            <td mat-cell *matCellDef="let r">
+              {{ r.nombreArchivo }}
+              @if (r.mensaje) {
+                <div class="mensaje">{{ r.mensaje }}</div>
+              }
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="estado">
+            <th mat-header-cell *matHeaderCellDef>Estado</th>
+            <td mat-cell *matCellDef="let r">
+              <span class="estado" [attr.data-estado]="r.estado">{{ etiqueta(r.estado) }}</span>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="leidos">
+            <th mat-header-cell *matHeaderCellDef class="num">Leídos</th>
+            <td mat-cell *matCellDef="let r" class="num">{{ r.leidos | number }}</td>
+          </ng-container>
+          <ng-container matColumnDef="procesados">
+            <th mat-header-cell *matHeaderCellDef class="num">Procesados</th>
+            <td mat-cell *matCellDef="let r" class="num">{{ r.procesados | number }}</td>
+          </ng-container>
+          <ng-container matColumnDef="rechazados">
+            <th mat-header-cell *matHeaderCellDef class="num">Rechazados</th>
+            <td mat-cell *matCellDef="let r" class="num">{{ r.rechazados | number }}</td>
+          </ng-container>
+          <ng-container matColumnDef="duplicados">
+            <th mat-header-cell *matHeaderCellDef class="num">
+              <span matTooltip="Filas que ya existían de una carga anterior y se actualizaron">Duplicados</span>
+            </th>
+            <td mat-cell *matCellDef="let r" class="num">{{ r.duplicados | number }}</td>
+          </ng-container>
+          <ng-container matColumnDef="tiempo">
+            <th mat-header-cell *matHeaderCellDef class="num">Tiempo</th>
+            <td mat-cell *matCellDef="let r" class="num">{{ segundos(r.tiempoMs) }}</td>
+          </ng-container>
+          <ng-container matColumnDef="acciones">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let r" class="num">
+              @if (r.rechazados > 0) {
+                <button mat-button type="button" (click)="verRechazados(r.id, r.nombreArchivo)">Ver rechazados</button>
+              }
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="columnasResultado"></tr>
+          <tr mat-row *matRowDef="let fila; columns: columnasResultado"></tr>
+        </table>
+      </div>
+    </mat-card-content>
+  </mat-card>
+}
+
+@if (seleccion(); as s) {
+  <mat-card appearance="outlined" class="seccion" id="rechazados">
+    <mat-card-content>
+      <app-rechazados [cargaId]="s.id" [archivo]="s.archivo" />
+      <div class="acciones">
+        <span></span>
+        <button mat-button type="button" (click)="seleccion.set(null)">Cerrar</button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+}
+
+<mat-card appearance="outlined" class="seccion">
+  <mat-card-header>
+    <mat-card-title>Historial de cargas</mat-card-title>
+    <button
+      mat-icon-button
+      type="button"
+      class="recargar"
+      (click)="cargarHistorial()"
+      [disabled]="cargandoHistorial()"
+      aria-label="Actualizar historial"
+      matTooltip="Actualizar"
+    >
+      <mat-icon>refresh</mat-icon>
+    </button>
+  </mat-card-header>
+  <mat-card-content>
+    @if (cargandoHistorial()) {
+      <mat-progress-bar mode="indeterminate" />
+    }
+    @if (errorHistorial()) {
+      <p class="vacio">
+        No se pudo obtener el historial.
+        <button mat-button type="button" (click)="cargarHistorial()">Reintentar</button>
+      </p>
+    } @else if (historial().length === 0 && !cargandoHistorial()) {
+      <p class="vacio">Todavía no se ha cargado ningún archivo.</p>
+    } @else {
+      <div class="tabla-desplazable">
+        <table mat-table [dataSource]="historial()">
+          <ng-container matColumnDef="fecha">
+            <th mat-header-cell *matHeaderCellDef>Fecha</th>
+            <td mat-cell *matCellDef="let c">{{ c.fecha_inicio | date: 'dd/MM/yyyy HH:mm' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="archivo">
+            <th mat-header-cell *matHeaderCellDef>Archivo</th>
+            <td mat-cell *matCellDef="let c">
+              {{ c.archivo }}
+              @if (c.mensaje) {
+                <div class="mensaje">{{ c.mensaje }}</div>
+              }
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="estado">
+            <th mat-header-cell *matHeaderCellDef>Estado</th>
+            <td mat-cell *matCellDef="let c">
+              <span class="estado" [attr.data-estado]="c.estado">{{ etiqueta(c.estado) }}</span>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="leidos">
+            <th mat-header-cell *matHeaderCellDef class="num">Leídos</th>
+            <td mat-cell *matCellDef="let c" class="num">{{ c.leidos | number }}</td>
+          </ng-container>
+          <ng-container matColumnDef="procesados">
+            <th mat-header-cell *matHeaderCellDef class="num">Procesados</th>
+            <td mat-cell *matCellDef="let c" class="num">{{ c.procesados | number }}</td>
+          </ng-container>
+          <ng-container matColumnDef="rechazados">
+            <th mat-header-cell *matHeaderCellDef class="num">Rechazados</th>
+            <td mat-cell *matCellDef="let c" class="num">{{ c.rechazados | number }}</td>
+          </ng-container>
+          <ng-container matColumnDef="tiempo">
+            <th mat-header-cell *matHeaderCellDef class="num">Tiempo</th>
+            <td mat-cell *matCellDef="let c" class="num">{{ segundos(c.tiempo_ms) }}</td>
+          </ng-container>
+          <ng-container matColumnDef="acciones">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let c" class="num">
+              @if (c.rechazados > 0) {
+                <button mat-button type="button" (click)="verRechazados(c._id, c.archivo)">Ver rechazados</button>
+              }
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="columnasHistorial"></tr>
+          <tr mat-row *matRowDef="let fila; columns: columnasHistorial"></tr>
+        </table>
+      </div>
+    }
+  </mat-card-content>
+</mat-card>
